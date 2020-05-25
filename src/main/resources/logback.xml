@@ -1,0 +1,48 @@
+<configuration debug="true">
+
+  <property name="env" value="dev" />
+  <property name="destination" value="logging-logstash-dev.es.cid-online.net:30001" />
+
+  <appender name="consoleAppender" class="ch.qos.logback.core.ConsoleAppender">
+    <withJansi>true</withJansi>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} [%thread] %highlight(%.-3level) %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <statusListener class="ch.qos.logback.core.status.OnConsoleStatusListener" />
+
+  <appender name="logstashAppender" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+    <destination>${destination}</destination>
+    <writeBufferSize>0</writeBufferSize>
+
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <pattern>
+          <pattern>
+            {
+              "wps-publication": [{
+                "partitionNumber": "%mdc{partitionNumber}",
+                "portal": "%mdc{Portal}",
+                "timestamp": "%date{ISO8601}",
+                "environment": "${env}",
+                "squad": "escms",
+                "microservice": "wps-publication",
+                "message": "%message",
+                "logger": "%logger",
+                "container": "pod1",
+                "level": "%level"
+              }]
+            }
+          </pattern>
+        </pattern>
+        <mdc/>
+      </providers>
+    </encoder>
+  </appender>
+
+  <root level="INFO">
+    <appender-ref ref="consoleAppender"/>
+    <appender-ref ref="logstashAppender"/>
+  </root>
+</configuration>
